@@ -17,17 +17,23 @@ across specified columns of a new copy of a DataFrame.
 - `cols=All()`: Columns to process. Defaults to all columns.
   Can be column names, indices, or a vector of these.
 """
-function _replace_value_in_df(df::DataFrame, old_value::Any, new_value::Any; cols=All())
-    new_df = copy(df) # Create a new copy of the DataFrame
+_replace_value_in_df(df::DataFrame, ps...; kwargs...) = _replace_value_in_df!(copy(df), ps...; kwargs...)
+
+
+function _replace_value_in_df!(df::DataFrame, ps::Pair...; cols=All(), replaceopts...)
     col_names = DataFrames.names(df, cols)
     for col_name in col_names
-        column_vector = new_df[!, col_name]
+        column_vector = df[!, col_name]
         # Base.replace creates a new vector with the replacements and handles type promotion
-        new_df[!, col_name] = Base.replace(column_vector, old_value => new_value)
+        df[!, col_name] = Base.replace(column_vector, ps...; replaceopts...)
     end
-    return new_df
+    return df
 end
 
-OkValueReplacer.replace(df::AbstractDataFrame, p::Pair; kwargs...) = _replace_value_in_df(df, p[1], p[2]; kwargs...)
+
+OkValueReplacer.replace!(df::AbstractDataFrame, ps::Pair...; kwargs...) = _replace_value_in_df!(df, ps...; kwargs...)
+
+OkValueReplacer.replace(df::AbstractDataFrame, ps::Pair...; kwargs...) = _replace_value_in_df(df, ps...; kwargs...)
+
 
 end
