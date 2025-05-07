@@ -1,0 +1,13 @@
+name = "OkValueReplacer"
+uuid = "13790f54-d860-4895-b730-45df7ac0a90b"
+authors = ["okatsn <okatsn@gmail.com> and contributors"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.9"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
