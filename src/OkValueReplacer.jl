@@ -11,14 +11,24 @@ export replace_nan_with_missing,
     replace_inf_with_nan
 
 """
-    _replace_value_in_df(df::DataFrame, old_value, new_value)
+    _replace_value_in_df(df::DataFrame, old_value, new_value; cols=All())
 
 Internal core function to replace a specified old value with a new value
-across all columns of a new copy of a DataFrame.
+across specified columns of a new copy of a DataFrame.
+
+# Arguments
+- `df::DataFrame`: The DataFrame to process
+- `old_value::Any`: The value to be replaced
+- `new_value::Any`: The value to replace with
+
+# Keywords
+- `cols=All()`: Columns to process. Defaults to all columns.
+  Can be column names, indices, or a vector of these.
 """
-function _replace_value_in_df(df::DataFrame, old_value::Any, new_value::Any)
+function _replace_value_in_df(df::DataFrame, old_value::Any, new_value::Any; cols=All())
     new_df = copy(df) # Create a new copy of the DataFrame
-    for col_name in names(new_df)
+    col_names = DataFrames.names(df, cols)
+    for col_name in col_names
         column_vector = new_df[!, col_name]
         # Base.replace creates a new vector with the replacements and handles type promotion
         new_df[!, col_name] = Base.replace(column_vector, old_value => new_value)
@@ -26,60 +36,25 @@ function _replace_value_in_df(df::DataFrame, old_value::Any, new_value::Any)
     return new_df
 end
 
-"""
-    replace_nan_with_missing(df::DataFrame)
 
-Creates a new DataFrame replacing all `NaN` values with `missing`.
-"""
-replace_nan_with_missing(df::DataFrame) = _replace_value_in_df(df, NaN, missing)
+replace_nan_with_missing(df; kwargs...) = _replace_value_in_df(df, NaN, missing; kwargs...)
 
-"""
-    replace_missing_with_nan(df::DataFrame)
 
-Creates a new DataFrame replacing all `missing` values with `NaN`.
-Column types will be promoted to support `Float64` (for `NaN`) if necessary.
-"""
-replace_missing_with_nan(df::DataFrame) = _replace_value_in_df(df, missing, NaN)
+replace_missing_with_nan(df; kwargs...) = _replace_value_in_df(df, missing, NaN; kwargs...)
 
-"""
-    replace_missing_with_nothing(df::DataFrame)
 
-Creates a new DataFrame replacing all `missing` values with `nothing`.
-Column types will be promoted to `Union{T, Nothing}` if necessary.
-"""
-replace_missing_with_nothing(df::DataFrame) = _replace_value_in_df(df, missing, nothing)
+replace_missing_with_nothing(df; kwargs...) = _replace_value_in_df(df, missing, nothing; kwargs...)
 
-"""
-    replace_nan_with_nothing(df::DataFrame)
 
-Creates a new DataFrame replacing all `NaN` values with `nothing`.
-Column types will be promoted to `Union{T, Nothing}` if necessary.
-"""
-replace_nan_with_nothing(df::DataFrame) = _replace_value_in_df(df, NaN, nothing)
+replace_nan_with_nothing(df; kwargs...) = _replace_value_in_df(df, NaN, nothing; kwargs...)
 
-"""
-    replace_nothing_with_nan(df::DataFrame)
 
-Creates a new DataFrame replacing all `nothing` values with `NaN`.
-Column types will be promoted to support `Float64` (for `NaN`) if necessary.
-"""
-replace_nothing_with_nan(df::DataFrame) = _replace_value_in_df(df, nothing, NaN)
+replace_nothing_with_nan(df; kwargs...) = _replace_value_in_df(df, nothing, NaN; kwargs...)
 
-"""
-    replace_nothing_with_missing(df::DataFrame)
 
-Creates a new DataFrame replacing all `nothing` values with `missing`.
-Column types will be promoted to `Union{T, Missing}` if necessary.
-"""
-replace_nothing_with_missing(df::DataFrame) = _replace_value_in_df(df, nothing, missing)
+replace_nothing_with_missing(df; kwargs...) = _replace_value_in_df(df, nothing, missing; kwargs...)
 
-"""
-    replace_inf_with_nan(df::DataFrame)
 
-Creates a new DataFrame replacing all positive `Inf` (Infinity) values with `NaN`.
-This function specifically targets `Inf`. For `-Inf`, a separate or modified
-function would be needed.
-"""
-replace_inf_with_nan(df::DataFrame) = _replace_value_in_df(df, Inf, NaN)
+replace_inf_with_nan(df; kwargs...) = _replace_value_in_df(df, Inf, NaN; kwargs...)
 
 end
