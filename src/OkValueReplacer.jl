@@ -2,14 +2,6 @@ module OkValueReplacer
 
 using DataFrames
 
-export replace_nan_with_missing,
-    replace_missing_with_nan,
-    replace_missing_with_nothing,
-    replace_nan_with_nothing,
-    replace_nothing_with_nan,
-    replace_nothing_with_missing,
-    replace_inf_with_nan
-
 """
     _replace_value_in_df(df::DataFrame, old_value, new_value; cols=All())
 
@@ -36,25 +28,6 @@ function _replace_value_in_df(df::DataFrame, old_value::Any, new_value::Any; col
     return new_df
 end
 
-
-replace_nan_with_missing(df; kwargs...) = _replace_value_in_df(df, NaN, missing; kwargs...)
-
-
-replace_missing_with_nan(df; kwargs...) = _replace_value_in_df(df, missing, NaN; kwargs...)
-
-
-replace_missing_with_nothing(df; kwargs...) = _replace_value_in_df(df, missing, nothing; kwargs...)
-
-
-replace_nan_with_nothing(df; kwargs...) = _replace_value_in_df(df, NaN, nothing; kwargs...)
-
-
-replace_nothing_with_nan(df; kwargs...) = _replace_value_in_df(df, nothing, NaN; kwargs...)
-
-
-replace_nothing_with_missing(df; kwargs...) = _replace_value_in_df(df, nothing, missing; kwargs...)
-
-
-replace_inf_with_nan(df; kwargs...) = _replace_value_in_df(df, Inf, NaN; kwargs...)
+OkValueReplacer.replace(df::AbstractDataFrame, p::Pair; kwargs...) = _replace_value_in_df(df, p[1], p[2]; kwargs...)
 
 end

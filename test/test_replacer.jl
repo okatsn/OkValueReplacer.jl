@@ -16,6 +16,26 @@ is_actual_nothing(x) = x === nothing # or isnothing(x) for Julia >= 1.2
 # Predicate for positive Infinity values
 is_actual_pos_inf(x) = isa(x, AbstractFloat) && isinf(x) && x > 0
 
+replace_nan_with_missing(df; kwargs...) = OkValueReplacer.replace(df, NaN => missing; kwargs...)
+
+
+replace_missing_with_nan(df; kwargs...) = OkValueReplacer.replace(df, missing => NaN; kwargs...)
+
+
+replace_missing_with_nothing(df; kwargs...) = OkValueReplacer.replace(df, missing => nothing; kwargs...)
+
+
+replace_nan_with_nothing(df; kwargs...) = OkValueReplacer.replace(df, NaN => nothing; kwargs...)
+
+
+replace_nothing_with_nan(df; kwargs...) = OkValueReplacer.replace(df, nothing => NaN; kwargs...)
+
+
+
+replace_nothing_with_missing(df; kwargs...) = OkValueReplacer.replace(df, nothing => missing; kwargs...)
+
+replace_inf_with_nan(df; kwargs...) = OkValueReplacer.replace(df, Inf => NaN; kwargs...)
+
 # --- Test Suite ---
 @testset "OkValueReplacer.jl Tests" begin
 
