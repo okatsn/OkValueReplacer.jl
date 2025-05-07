@@ -86,7 +86,7 @@ is_actual_pos_inf(x) = isa(x, AbstractFloat) && isinf(x) && x > 0
         df_builder() = DataFrame(
             A=[1.0, NaN, 3.0, Inf, missing, NaN],
             B=[NaN, 2.0, NaN, 0.0, NaN, 1.0],
-            C=Any[NaN, "text", nothing, NaN, 5.5]
+            C=Any[NaN, "text", nothing, NaN, 5, 5]
         )
         test_replacement_integrity(df_builder, replace_nan_with_nothing, is_actual_nan, nothing)
     end
@@ -113,7 +113,7 @@ is_actual_pos_inf(x) = isa(x, AbstractFloat) && isinf(x) && x > 0
         df_builder() = DataFrame(
             A=[Inf, 1.0, -Inf, NaN, Inf, 0.0], # Test with positive and negative Inf
             B=[1.0, Inf, 3.0, Inf, missing, nothing],
-            C=Any[Inf, "text", -Inf, 0.0, 5.5]
+            C=Any[Inf, "text", -Inf, 0.0, 5, 5]
         )
         test_replacement_integrity(df_builder, replace_inf_with_nan, is_actual_pos_inf, NaN)
 
@@ -123,7 +123,7 @@ is_actual_pos_inf(x) = isa(x, AbstractFloat) && isinf(x) && x > 0
         @test isequal(df_processed_specific.val[1], NaN)     # Inf -> NaN
         @test isequal(df_processed_specific.val[2], -Inf)    # -Inf remains -Inf
         @test isequal(df_processed_specific.val[3], 0.0)
-        @test isactual_nan(df_processed_specific.val[4]) # NaN remains NaN
+        @test is_actual_nan(df_processed_specific.val[4]) # NaN remains NaN
     end
 
 end
