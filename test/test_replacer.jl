@@ -147,3 +147,131 @@ replace_inf_with_nan(df; kwargs...) = OkValueReplacer.replace(df, Inf => NaN; kw
     end
 
 end
+
+@testset "In-place vs Non-in-place Operations" begin
+    # Create a test dataframe with various types of values
+    df_original = DataFrame(
+        A=[1.0, NaN, 3.0, Inf, missing],
+        B=[nothing, 2.0, NaN, 0.0, nothing],
+        C=["text", "data", missing, "end", nothing]
+    )
+
+    @testset "Non-in-place operations (using replace)" begin
+        # Test that replace returns a new DataFrame and doesn't modify the input
+        df_copy = copy(df_original)
+
+        # Test NaN replacement
+        result = OkValueReplacer.replace(df_copy, NaN => 999.0)
+        @test result !== df_copy  # Should return a new DataFrame
+        @test isequal(df_copy, df_original)  # Original should not be modified
+        @test !isequal(result, df_original)  # Result should be different
+
+        # Test with multiple pairs
+        result = OkValueReplacer.replace(df_copy, NaN => 999.0, nothing => "REPLACED")
+        @test result !== df_copy
+        @test isequal(df_copy, df_original)  # Original still unchanged
+        @test !isequal(result, df_original)
+
+        # Test with column selection
+        result = OkValueReplacer.replace(df_copy, NaN => 999.0; cols=[:A])
+        @test result !== df_copy
+        @test isequal(df_copy, df_original)  # Original still unchanged
+        @test !isequal(result, df_original)
+        @test result[1, :B] === nothing  # B column should still have NaN
+        @test result[1, :A] === 1.0  # A column values should remain the same if not NaN
+        @test df_copy[2, :A] === NaN
+        @test result[2, :A] === 999.0  # A column NaN should be replaced
+    end
+
+    @testset "In-place operations (using replace!)" begin
+        # Test that replace! modifies the input DataFrame and returns the same object
+
+        # Test NaN replacement
+        df_copy = copy(df_original)
+        result = OkValueReplacer.replace!(df_copy, NaN => 999.0)
+        @test result === df_copy  # Should return the same DataFrame
+        @test !isequal(df_copy, df_original)  # Original should be modified
+        @test df_copy[2, :A] === 999.0  # Check specific replacement
+        @test df_copy[3, :B] === 999.0
+
+        # Test with multiple pairs
+        df_copy = copy(df_original)
+        result = OkValueReplacer.replace!(df_copy, NaN => 999.0, nothing => "REPLACED")
+        @test result === df_copy
+        @test !isequal(df_copy, df_original)
+        @test df_copy[2, :A] === 999.0
+        @test df_copy[1, :B] == "REPLACED"
+        @test df_copy[5, :B] == "REPLACED"
+        @test df_copy[5, :C] == "REPLACED"
+
+        # Test with column selection
+        df_copy = copy(df_original)
+        result = OkValueReplacer.replace!(df_copy, NaN => 999.0; cols=[:A])
+        @test result === df_copy
+        @test !isequal(df_copy, df_original)
+        @test df_copy[2, :A] === 999.0  # A column NaN should be replaced
+        @test df_copy[3, :B] === NaN    # B column NaN should remain unchanged
+
+        # Test with multiple column selection
+        df_copy = copy(df_original)
+        result = OkValueReplacer.replace!(df_copy, missing => "MISSING"; cols=[:A, :C])
+        @test result === df_copy
+        @test !isequal(df_copy, df_original)
+        @test df_copy[5, :A] == "MISSING"  # A column missing should be replaced
+        @test df_copy[3, :C] == "MISSING"  # C column missing should be replaced
+    end
+
+    @testset "Edge cases for in-place and non-in-place operations" begin
+        # Test with empty dataframe
+        empty_df = DataFrame(A=Float64[], B=String[])
+        empty_copy = copy(empty_df)
+
+        # Non-in-place on empty dataframe
+        result = OkValueReplacer.replace(empty_df, NaN => 0.0)
+        @test result !== empty_df
+        @test size(result) == size(empty_df)
+        @test isequal(empty_df, empty_copy)  # Original should be unchanged
+
+        # In-place on empty dataframe
+        result = OkValueReplacer.replace!(empty_copy, NaN => 0.0)
+        @test result === empty_copy
+        @test size(result) == size(empty_df)
+
+        # Test with no matching values to replace
+        df_no_matches = DataFrame(A=[1, 2, 3], B=["a", "b", "c"])
+        df_no_matches_copy = copy(df_no_matches)
+
+        # Non-in-place with no matches
+        result = OkValueReplacer.replace(df_no_matches, NaN => 0.0)
+        @test result !== df_no_matches
+        @test isequal(result, df_no_matches)  # Content should be the same
+        @test isequal(df_no_matches, df_no_matches_copy)  # Original should be unchanged
+
+        # In-place with no matches
+        result = OkValueReplacer.replace!(df_no_matches_copy, NaN => 0.0)
+        @test result === df_no_matches_copy
+        @test isequal(result, df_no_matches)  # Content should still be the same
+    end
+
+    @testset "Interaction between specialized functions and in-place operations" begin
+        # Test that our wrapper functions (replace_nan_with_missing, etc.) use the non-in-place version
+
+        df_copy = copy(df_original)
+
+        # All specialized functions should use the non-in-place version
+        result = replace_nan_with_missing(df_copy)
+        @test result !== df_copy
+        @test isequal(df_copy, df_original)  # Original should not be modified
+
+        result = replace_missing_with_nan(df_copy)
+        @test result !== df_copy
+        @test isequal(df_copy, df_original)
+
+        # Test with column selection in specialized functions
+        result = replace_nan_with_missing(df_copy, cols=[:A])
+        @test result !== df_copy
+        @test isequal(df_copy, df_original)
+        @test ismissing(result[2, :A])  # A column NaN should be replaced with missing
+        @test isnan(result[3, :B])      # B column NaN should remain unchanged
+    end
+end
